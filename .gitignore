@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+
+# Chroma database
+chroma/
+
+# Generated cleaned docs
+clean_data/
+
+# VS Code
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Ollama / local model files
+models/
+
+# Environment variables
+.env
+
+data/

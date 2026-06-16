@@ -1,5 +1,7 @@
 # Local RAG Project
 
+https://ragbotlocal.streamlit.app/
+
 This project is a beginner-friendly local RAG system built in Python. It uses:
 
 - LangChain

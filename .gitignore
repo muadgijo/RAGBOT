@@ -24,4 +24,9 @@ models/
 # Environment variables
 .env
 
+# Streamlit secrets and cache
+.streamlit/secrets.toml
+.streamlit/*.toml
+.streamlit/cache/
+
 data/

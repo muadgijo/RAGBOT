@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+chroma/
+clean_data/
+.vscode/
+.streamlit/secrets.toml
+.streamlit/cache/
+models/
+.env
+.git
+.gitignore

@@ -1,4 +1,5 @@
-from langchain_community.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -21,12 +22,20 @@ def main():
 
 def load_documents():
 
+    # Avoid unstructured-based loaders (they require extra NLTK models like punkt_tab)
+    # so simple .txt files load reliably.
+    # Use plain TextLoader to prevent DirectoryLoader from falling back to unstructured-based loaders
+    # (which require extra NLTK assets like punkt_tab).
     loader = DirectoryLoader(
         CLEAN_DATA_PATH,
-        glob="**/*.txt"
+        glob="**/*.txt",
+        loader_cls=TextLoader,
+        show_progress=False,
     )
 
     documents = loader.load()
+
+
 
     print(f"Loaded {len(documents)} documents")
 

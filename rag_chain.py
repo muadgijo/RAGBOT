@@ -62,14 +62,13 @@ while True:
     for s in sources:
         print(" -", s)
 
-    # Context injection: supply only the retrieved context and instruct
-    # the model to rely exclusively on it. Ask for concise, technical
-    # answers and provide an exact fallback sentence if the context is
-    # insufficient to answer.
+    # Context injection: supply only the retrieved context.
+    # Make the fallback less brittle (only when context is empty).
     prompt = f"""
-You are a concise AWS documentation assistant. Use ONLY the Context section below to answer.
+You are a concise AWS documentation assistant.
+Use ONLY the Context section below to answer.
 
-Context:
+Context (each chunk with its source):
 {context_text}
 
 Question:
@@ -77,12 +76,14 @@ Question:
 
 Instructions:
 - Answer concisely and technically.
-- Use only information present in Context. Do NOT hallucinate or invent details.
-- If the answer cannot be found in Context, reply exactly:
+- Do NOT hallucinate or invent details.
+- If the Context is empty (no retrieved text), reply exactly:
   I could not find that in the documentation.
+- Otherwise, answer using the information in Context even if it doesn't exactly match the phrasing of the question.
 
 Answer:
 """
+
 
     # Generation: call the local Ollama model. The temperature and stop
     # tokens have been set on the `llm` instance above, so we do not pass

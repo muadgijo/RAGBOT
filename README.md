@@ -2,20 +2,45 @@
 
 https://ragbotlocal.streamlit.app/
 
-This project is a beginner-friendly local RAG system built in Python. It uses:
+This project turns AWS Lambda docs into a small RAG app with Docker, FastAPI, Groq, and Ollama.
 
-- LangChain
-- ChromaDB
-- HuggingFace embeddings
-- Ollama
-- Phi-3 running locally
+At a glance:
 
-The goal is simple:
+- Docker packages the app for deployment
+- FastAPI exposes `/health` and `/query`
+- Groq handles online answer generation
+- Ollama handles offline local generation
+- ChromaDB stores and searches the cleaned docs
+- Streamlit provides the UI version
 
-1. Clean the AWS Lambda documentation.
-2. Build a vector database from the cleaned text.
-3. Ask questions against the database.
-4. Generate answers locally with Ollama.
+What it does:
+
+1. Cleans the AWS Lambda documentation.
+2. Builds a vector database from the cleaned text.
+3. Retrieves the most relevant chunks for a question.
+4. Generates an answer through Groq or Ollama.
+
+What makes it different:
+
+- It works both locally and in Docker.
+- It can switch between cloud and offline LLMs.
+- It returns sources with each answer.
+
+Proof points you can mention:
+
+- Docker image builds successfully.
+- `POST /query` returns HTTP 200.
+- Swagger UI works at `/docs`.
+- Retrieval returns source files from ChromaDB.
+- Duplicate source entries are removed in the API response.
+
+## Screenshots
+
+These are the two views most people will want to see first:
+
+![FastAPI Swagger UI](ragbot%20api%20.png)
+
+![Streamlit demo](streamlit%20demo.png)
 
 ## What the Project Does
 

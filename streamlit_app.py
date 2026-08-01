@@ -1,13 +1,14 @@
 from pathlib import Path
+import os
 
 import streamlit as st
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_ollama import OllamaLLM
+
+from rag_utils import build_prompt, get_llm_response, retrieve_context
 
 CHROMA_PATH = "chroma"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-OLLAMA_MODEL = "phi3"
 
 
 def apply_theme() -> None:
@@ -206,61 +207,31 @@ def load_vector_db() -> Chroma:
     )
 
 
-@st.cache_resource
-def load_llm() -> OllamaLLM:
-    return OllamaLLM(
-        model=OLLAMA_MODEL,
-        temperature=0.1,
-        stop=["\nAsk:", "\nQuestion:"],
-        num_predict=256,
-        num_gpu=0,
-    )
-
-
-def build_prompt(question: str, context_text: str) -> str:
-    return f"""
-You are a concise AWS documentation assistant. Use ONLY the Context section below to answer.
-
-Context:
-{context_text}
-
-Question:
-{question}
-
-Instructions:
-- Answer concisely and technically.
-- Use only information present in Context. Do NOT hallucinate or invent details.
-- If the answer cannot be found in Context, reply exactly:
-  I could not find that in the documentation.
-
-Answer:
-"""
-
-
 def ask_rag(question: str, k: int = 2):
     db = load_vector_db()
-    llm = load_llm()
 
-    results = db.similarity_search(question, k=k)
-    context_text = "\n\n".join(doc.page_content for doc in results)
+    results, context_text = retrieve_context(db, question, initial_k=max(k + 4, 6), final_k=k)
     sources = [doc.metadata.get("source", "unknown") for doc in results]
 
     prompt = build_prompt(question, context_text)
-    answer = llm.invoke(prompt)
+    answer = get_llm_response(prompt, os.getenv("LLM_BACKEND", "ollama"))
 
     return answer, sources
 
 
 def render_sidebar() -> None:
     st.sidebar.header("Project Status")
-    st.sidebar.write("Model: phi3 via Ollama")
+    st.sidebar.write(f"Backend: {os.getenv('LLM_BACKEND', 'ollama')}")
     st.sidebar.write("Embeddings: all-MiniLM-L6-v2")
     st.sidebar.write("Vector DB: local Chroma")
 
     st.sidebar.markdown("### Pre-run checklist")
     st.sidebar.markdown("1. Run `python clean_docs.py`")
     st.sidebar.markdown("2. Run `python create_database.py`")
-    st.sidebar.markdown("3. Start Ollama and pull `phi3`")
+    if os.getenv("LLM_BACKEND", "ollama") == "groq":
+        st.sidebar.markdown("3. Set `GROQ_API_KEY` and optionally `GROQ_MODEL`")
+    else:
+        st.sidebar.markdown("3. Start Ollama and pull `phi3`")
 
 
 def render_hero() -> None:

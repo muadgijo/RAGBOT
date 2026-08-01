@@ -167,6 +167,14 @@ The script prints the source file names before the answer, which helps you see w
 - The embedding model is downloaded from HuggingFace the first time you run it.
 - The README and scripts are intentionally simple so they are easy to learn from.
 
+## Configuration Files
+
+- `.env.example` is the tracked template for local settings.
+- `.env` is the private local override file and is ignored by git.
+- `config.py` loads `.env` and exposes the shared backend and model defaults.
+
+To switch to Groq, set `LLM_BACKEND=groq` in `.env` and provide `GROQ_API_KEY`.
+
 ## Troubleshooting
 
 ### Ollama tries to use GPU

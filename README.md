@@ -175,6 +175,63 @@ The script prints the source file names before the answer, which helps you see w
 
 To switch to Groq, set `LLM_BACKEND=groq` in `.env` and provide `GROQ_API_KEY`.
 
+## FastAPI And Docker
+
+The repo now includes a small FastAPI app in `api.py`.
+
+What it does:
+
+- loads embeddings and the Chroma database once at startup
+- exposes `GET /health` for a quick check
+- exposes `POST /query` for RAG answers over HTTP
+- reuses the same retrieval and prompt logic as the terminal script
+
+Run it locally:
+
+```powershell
+uvicorn api:app --reload
+```
+
+Open the Swagger UI at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Build the Docker image:
+
+```powershell
+docker build -t ragbot .
+```
+
+Run the container with Groq:
+
+```powershell
+docker run --rm -p 8000:8000 `
+	-e LLM_BACKEND=groq `
+	-e GROQ_API_KEY=YOUR_NEW_KEY `
+	-e GROQ_MODEL=llama-3.1-8b-instant `
+	ragbot
+```
+
+Run the container with host Ollama:
+
+```powershell
+docker run --rm -p 8000:8000 `
+	-e LLM_BACKEND=ollama `
+	-e OLLAMA_MODEL=phi3 `
+	-e OLLAMA_BASE_URL=http://host.docker.internal:11434 `
+	ragbot
+```
+
+Test the API:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/query" -Method POST -ContentType "application/json" -Body '{"question":"What is a Lambda handler?"}'
+```
+
+If retrieval looks empty in Docker, make sure `chroma/` is not excluded from the build context and that the container can see the database files.
+
 ## Troubleshooting
 
 ### Ollama tries to use GPU
@@ -210,6 +267,34 @@ Do not commit these generated or local files unless you specifically want them i
 - `.env`
 
 The raw docs under `data/` are the source material, but you may choose to keep them out of the repo if that matches your workflow.
+
+## Git Push Troubleshooting
+
+`git bash` is fine to use. The shell was not the issue.
+
+If you see this:
+
+```text
+fatal: Could not read from remote repository.
+```
+
+check your remote name first. A typo like `orgin` instead of `origin` causes that exact error.
+
+Quick checks:
+
+```bash
+git remote -v
+git branch --show-current
+```
+
+If local and remote both have new commits, use rebase before pushing:
+
+```bash
+git pull --rebase origin main
+git push origin main
+```
+
+Why rebase: it replays your local commits on top of the latest remote commits so history stays linear and avoids unnecessary merge commits.
 
 ## What To Learn From This Project
 

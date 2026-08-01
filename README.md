@@ -36,7 +36,6 @@ Proof points you can mention:
 
 ## Screenshots
 
-These are the two views most people will want to see first:
 
 ![FastAPI Swagger UI](ragbot%20api%20.png)
 

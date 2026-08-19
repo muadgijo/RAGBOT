@@ -51,24 +51,24 @@ HTML_PAGE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAGBOT • AWS Documentation Assistant</title>
+    <title>RAGBOT • AWS Lambda Documentation</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-
         :root {
-            --bg: #071113;
-            --panel: #0d1f23;
-            --panel-2: #12282d;
-            --card-border: rgba(71, 240, 255, 0.18);
-            --card-hover: rgba(71, 240, 255, 0.35);
-            --cyan: #47f0ff;
-            --cyan-glow: rgba(71, 240, 255, 0.3);
-            --text-main: #e2f7f8;
-            --text-muted: #8ab6bb;
-            --accent-gradient: linear-gradient(135deg, #47f0ff 0%, #00b4d8 100%);
+            --bg-main: #0B0F17;
+            --bg-card: #111827;
+            --bg-subtle: #1F2937;
+            --border-color: #374151;
+            --border-hover: #4B5563;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --accent-blue: #38BDF8;
+            --accent-blue-hover: #0EA5E9;
+            --code-bg: #030712;
         }
 
         * {
@@ -78,544 +78,550 @@ HTML_PAGE = """<!DOCTYPE html>
         }
 
         body {
-            background-color: var(--bg);
-            background-image: 
-                radial-gradient(circle at 15% 15%, rgba(71, 240, 255, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 85% 20%, rgba(0, 180, 216, 0.07) 0%, transparent 40%),
-                linear-gradient(180deg, #071113 0%, #09171a 100%);
-            color: var(--text-main);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
-            padding: 2rem 1rem;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem 1rem;
+            line-height: 1.5;
         }
 
-        .container {
+        .layout {
             width: 100%;
-            max-width: 860px;
+            max-width: 820px;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
 
-        /* Header */
-        .hero {
-            background: linear-gradient(135deg, rgba(16, 38, 42, 0.95), rgba(9, 23, 26, 0.98));
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 2.2rem;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px rgba(71, 240, 255, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--accent-gradient);
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 0.35rem 0.8rem;
-            background: rgba(71, 240, 255, 0.08);
-            border: 1px solid rgba(71, 240, 255, 0.3);
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--cyan);
-            margin-bottom: 1rem;
-        }
-
-        .badge-dot {
-            width: 7px;
-            height: 7px;
-            background-color: #00ffaa;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #00ffaa;
-        }
-
-        h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: clamp(2rem, 4vw, 2.75rem);
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            line-height: 1.15;
-            background: linear-gradient(135deg, #ffffff 30%, #a5f3fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero p {
-            color: var(--text-muted);
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-top: 0.75rem;
-            max-width: 650px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
-
-        .stat-card {
-            background: rgba(13, 31, 35, 0.75);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 0.85rem 1rem;
+        /* Top Navigation Header */
+        .header {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .stat-val {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 600;
-            color: var(--cyan);
-            margin-top: 0.2rem;
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+            background: #1E293B;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+        }
+
+        .brand-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .brand-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-subtle);
+            border-color: var(--border-color);
         }
 
         /* Search Section */
-        .search-panel {
-            background: var(--panel);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .search-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
         }
 
-        .search-box {
+        .search-form {
             display: flex;
             gap: 0.75rem;
         }
 
-        .search-input {
+        .input-wrapper {
+            position: relative;
             flex: 1;
-            background: rgba(7, 17, 19, 0.85);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 0.9rem 1.2rem;
-            color: #ffffff;
-            font-size: 1rem;
-            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            background: #0B0F17;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
             outline: none;
-            transition: all 0.2s ease;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         .search-input:focus {
-            border-color: var(--cyan);
-            box-shadow: 0 0 18px var(--cyan-glow);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 1px var(--accent-blue);
         }
 
         .search-input::placeholder {
-            color: #557b80;
+            color: var(--text-muted);
         }
 
-        .btn-ask {
-            background: var(--accent-gradient);
+        .btn-submit {
+            background: var(--accent-blue);
+            color: #0B0F17;
             border: none;
-            border-radius: 14px;
-            padding: 0.9rem 1.8rem;
-            color: #071113;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
-            font-weight: 700;
+            border-radius: 8px;
+            padding: 0.85rem 1.4rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background-color 0.15s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             white-space: nowrap;
         }
 
-        .btn-ask:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px var(--cyan-glow);
+        .btn-submit:hover:not(:disabled) {
+            background: var(--accent-blue-hover);
         }
 
-        .btn-ask:disabled {
-            opacity: 0.6;
+        .btn-submit:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
         /* Suggestions */
-        .suggestions {
+        .suggestions-row {
             display: flex;
             flex-wrap: wrap;
+            align-items: center;
             gap: 0.5rem;
             margin-top: 1rem;
-            align-items: center;
+            font-size: 0.8rem;
         }
 
-        .suggestions-title {
-            font-size: 0.78rem;
+        .suggestions-label {
             color: var(--text-muted);
-            margin-right: 0.3rem;
+            margin-right: 0.25rem;
         }
 
-        .chip {
-            background: rgba(71, 240, 255, 0.06);
-            border: 1px solid rgba(71, 240, 255, 0.2);
-            border-radius: 999px;
-            padding: 0.35rem 0.85rem;
-            color: #b2e6ea;
-            font-size: 0.82rem;
+        .suggestion-btn {
+            background: #1F2937;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.3rem 0.65rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-family: inherit;
             cursor: pointer;
             transition: all 0.15s ease;
         }
 
-        .chip:hover {
-            background: rgba(71, 240, 255, 0.15);
-            border-color: var(--cyan);
-            color: #ffffff;
-            transform: translateY(-1px);
+        .suggestion-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+            background: #374151;
         }
 
-        /* Results */
-        .result-panel {
+        /* Result Panel */
+        .result-card {
             display: none;
-            background: var(--panel);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 1.8rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
-            animation: fadeIn 0.3s ease-out;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .result-header {
+        .result-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
             padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(71, 240, 255, 0.1);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .result-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.15rem;
+        .result-heading {
+            font-size: 0.9rem;
             font-weight: 600;
-            color: var(--cyan);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .result-actions {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            gap: 0.5rem;
         }
 
-        .btn-copy {
+        .btn-action {
             background: transparent;
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 0.35rem 0.75rem;
-            color: var(--text-muted);
-            font-size: 0.78rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-copy:hover {
-            border-color: var(--cyan);
-            color: #ffffff;
-        }
-
-        .answer-text {
-            color: var(--text-main);
-            font-size: 1.02rem;
-            line-height: 1.7;
-        }
-
-        .answer-text p {
-            margin-bottom: 0.85rem;
-        }
-
-        .answer-text ul, .answer-text ol {
-            margin-left: 1.5rem;
-            margin-bottom: 0.85rem;
-        }
-
-        .answer-text li {
-            margin-bottom: 0.35rem;
-        }
-
-        .answer-text pre {
-            background: #040c0e;
-            border: 1px solid rgba(71, 240, 255, 0.22);
-            border-radius: 12px;
-            padding: 1rem 1.2rem;
-            overflow-x: auto;
-            margin: 0.9rem 0;
-        }
-
-        .answer-text code {
-            font-family: Consolas, 'Courier New', monospace;
-            font-size: 0.88rem;
-            color: #47f0ff;
-            background: rgba(71, 240, 255, 0.08);
-            padding: 0.15rem 0.4rem;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
+            padding: 0.3rem 0.65rem;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
         }
 
-        .answer-text pre code {
+        .btn-action:hover {
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+            background: var(--bg-subtle);
+        }
+
+        /* Answer Markdown Styles */
+        .answer-content {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        .answer-content p {
+            margin-bottom: 0.85rem;
+        }
+
+        .answer-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .answer-content ul, .answer-content ol {
+            margin-left: 1.4rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .answer-content li {
+            margin-bottom: 0.3rem;
+        }
+
+        .answer-content pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            overflow-x: auto;
+            margin: 0.85rem 0;
+        }
+
+        .answer-content code {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.85rem;
+            color: #E0F2FE;
+            background: #1E293B;
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        .answer-content pre code {
             background: transparent;
             padding: 0;
-            color: #d1f7fa;
+            color: #F3F4F6;
         }
 
-        .answer-text strong {
-            color: #ffffff;
+        .answer-content strong {
             font-weight: 600;
+            color: #FFFFFF;
         }
 
-
-        .sources-wrapper {
-            margin-top: 1.5rem;
+        /* Sources Section */
+        .sources-block {
+            margin-top: 1.25rem;
             padding-top: 1rem;
-            border-top: 1px solid rgba(71, 240, 255, 0.1);
+            border-top: 1px solid var(--border-color);
         }
 
         .sources-title {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
+            font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 0.5rem;
         }
 
-        .sources-list {
+        .sources-flex {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
-        .source-tag {
-            background: rgba(7, 17, 19, 0.7);
-            border: 1px solid rgba(71, 240, 255, 0.15);
-            border-radius: 8px;
-            padding: 0.35rem 0.7rem;
-            font-size: 0.78rem;
-            color: #9fe9ef;
-            font-family: monospace;
+        .source-pill {
+            background: #0B0F17;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.25rem 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        /* Spinner */
+        /* Status & Latency Footer */
+        .meta-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0 0.5rem;
+        }
+
+        .meta-group {
+            display: flex;
+            gap: 1rem;
+        }
+
         .spinner {
             display: none;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(7, 17, 19, 0.3);
-            border-top: 2px solid #071113;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(11, 15, 23, 0.3);
+            border-top: 2px solid #0B0F17;
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            animation: spin 0.6s linear infinite;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        /* Footer */
-        .footer {
-            text-align: center;
-            color: #52757a;
-            font-size: 0.82rem;
-            margin-top: 1rem;
-        }
-
-        .footer a {
-            color: var(--cyan);
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
         @media (max-width: 600px) {
-            .hero { padding: 1.5rem; }
-            .search-box { flex-direction: column; }
-            .btn-ask { justify-content: center; width: 100%; }
+            .search-form { flex-direction: column; }
+            .btn-submit { width: 100%; justify-content: center; }
+            .header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Hero Header -->
-        <header class="hero">
-            <div class="badge">
-                <span class="badge-dot"></span>
-                Live API & Vector Search
-            </div>
-            <h1>RAGBOT</h1>
-            <p>
-                Search and explore AWS Lambda documentation with sub-second citations, verified retrieval, and Groq LLM inference.
-            </p>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-label">Vector Store</span>
-                    <span class="stat-val">ChromaDB</span>
+    <div class="layout">
+        <!-- Header -->
+        <header class="header">
+            <div class="brand-group">
+                <div class="brand-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-label">Embeddings</span>
-                    <span class="stat-val">all-MiniLM-L6-v2</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-label">LLM Engine</span>
-                    <span class="stat-val">Groq LPU</span>
+                <div>
+                    <h1 class="brand-title">RAGBOT</h1>
+                    <p class="brand-subtitle">AWS Lambda Documentation Assistant</p>
                 </div>
             </div>
+            <nav class="nav-links">
+                <a href="/docs" class="nav-link" target="_blank">Swagger API</a>
+                <a href="/health" class="nav-link" target="_blank">Health</a>
+            </nav>
         </header>
 
-        <!-- Search Form -->
-        <section class="search-panel">
-            <form id="query-form" class="search-box">
-                <input 
-                    type="text" 
-                    id="question-input" 
-                    class="search-input" 
-                    placeholder="Ask anything (e.g., What is AWS Lambda?)..." 
-                    autocomplete="off"
-                    required
-                >
-                <button type="submit" id="btn-submit" class="btn-ask">
-                    <span id="btn-text">Ask Bot</span>
-                    <div id="btn-spinner" class="spinner"></div>
+        <!-- Search Input Form -->
+        <main class="search-card">
+            <form id="search-form" class="search-form">
+                <div class="input-wrapper">
+                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input 
+                        type="text" 
+                        id="query-input" 
+                        class="search-input" 
+                        placeholder="Ask a technical question about AWS Lambda..." 
+                        autocomplete="off"
+                        required
+                    >
+                </div>
+                <button type="submit" id="submit-btn" class="btn-submit">
+                    <span id="submit-text">Search</span>
+                    <div id="submit-spinner" class="spinner"></div>
                 </button>
             </form>
 
-            <div class="suggestions">
-                <span class="suggestions-title">Try:</span>
-                <button type="button" class="chip" onclick="askSuggestion('What is AWS Lambda?')">What is AWS Lambda?</button>
-                <button type="button" class="chip" onclick="askSuggestion('How does Lambda scale?')">How does Lambda scale?</button>
-                <button type="button" class="chip" onclick="askSuggestion('What is a Lambda handler?')">What is a Lambda handler?</button>
+            <div class="suggestions-row">
+                <span class="suggestions-label">Examples:</span>
+                <button type="button" class="suggestion-btn" onclick="runQuery('What is AWS Lambda?')">What is AWS Lambda?</button>
+                <button type="button" class="suggestion-btn" onclick="runQuery('What is a Lambda handler?')">What is a Lambda handler?</button>
+                <button type="button" class="suggestion-btn" onclick="runQuery('How does Lambda scale?')">How does Lambda scale?</button>
+                <button type="button" class="suggestion-btn" onclick="runQuery('How do I deploy blank-nodejs?')">Deploy blank-nodejs</button>
             </div>
-        </section>
+        </main>
 
-        <!-- Response Result Panel -->
-        <section id="result-panel" class="result-panel">
-            <div class="result-header">
-                <div class="result-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Answer
+        <!-- Result View -->
+        <section id="result-card" class="result-card">
+            <div class="result-top">
+                <span class="result-heading">Response</span>
+                <div class="result-actions">
+                    <button id="copy-btn" class="btn-action" onclick="copyResponse()">Copy</button>
+                    <button class="btn-action" onclick="clearResponse()">Clear</button>
                 </div>
-                <button id="copy-btn" class="btn-copy" onclick="copyAnswer()">Copy</button>
             </div>
-            <div id="answer-container" class="answer-text"></div>
+            <div id="answer-body" class="answer-content"></div>
 
-            <div id="sources-container" class="sources-wrapper">
-                <div class="sources-title">Cited Documentation Sources</div>
-                <div id="sources-list" class="sources-list"></div>
+            <div id="sources-section" class="sources-block">
+                <div class="sources-title">Referenced Sources</div>
+                <div id="sources-flex" class="sources-flex"></div>
             </div>
         </section>
 
-        <!-- Footer -->
-        <footer class="footer">
-            FastAPI Backend • <a href="/docs" target="_blank">Interactive Swagger Docs</a> • <a href="/health" target="_blank">Health Check</a>
+        <!-- Meta Footer -->
+        <footer class="meta-bar">
+            <div class="meta-group">
+                <span>Vector Index: <strong>ChromaDB</strong></span>
+                <span>Inference: <strong>Groq LPU</strong></span>
+            </div>
+            <div id="latency-tag">Ready</div>
         </footer>
     </div>
 
     <script>
-        const form = document.getElementById('query-form');
-        const input = document.getElementById('question-input');
-        const btn = document.getElementById('btn-submit');
-        const btnText = document.getElementById('btn-text');
-        const spinner = document.getElementById('btn-spinner');
-        const resultPanel = document.getElementById('result-panel');
-        const answerContainer = document.getElementById('answer-container');
-        const sourcesList = document.getElementById('sources-list');
+        const form = document.getElementById('search-form');
+        const input = document.getElementById('query-input');
+        const btn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('submit-text');
+        const spinner = document.getElementById('submit-spinner');
+        const resultCard = document.getElementById('result-card');
+        const answerBody = document.getElementById('answer-body');
+        const sourcesFlex = document.getElementById('sources-flex');
+        const latencyTag = document.getElementById('latency-tag');
 
-        function askSuggestion(text) {
+        function runQuery(text) {
             input.value = text;
-            handleQuery(text);
+            executeSearch(text);
         }
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const question = input.value.trim();
-            if (question) handleQuery(question);
+            const text = input.value.trim();
+            if (text) executeSearch(text);
         });
 
-        async function handleQuery(question) {
+        async function executeSearch(question) {
+            const startTime = performance.now();
             btn.disabled = true;
-            btnText.textContent = 'Thinking...';
+            btnText.textContent = 'Searching';
             spinner.style.display = 'inline-block';
-            resultPanel.style.display = 'block';
-            answerContainer.textContent = 'Retrieving documentation and generating answer...';
-            sourcesList.innerHTML = '';
+            resultCard.style.display = 'block';
+            answerBody.innerHTML = '<span style="color: var(--text-muted)">Querying vector store and generating response...</span>';
+            sourcesFlex.innerHTML = '';
+            latencyTag.textContent = 'Processing...';
 
             try {
-                const res = await fetch('/query', {
+                const response = await fetch('/query', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question })
                 });
 
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Failed to fetch response');
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Failed to get response');
                 }
 
-                const data = await res.json();
-                let rawAnswer = data.answer || 'No answer returned.';
+                const data = await response.json();
+                const elapsedMs = Math.round(performance.now() - startTime);
+
+                const rawAnswer = data.answer || 'No answer generated.';
                 try {
-                    answerContainer.innerHTML = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(rawAnswer) : rawAnswer;
+                    answerBody.innerHTML = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(rawAnswer) : rawAnswer;
                 } catch(e) {
-                    answerContainer.textContent = rawAnswer;
+                    answerBody.textContent = rawAnswer;
                 }
 
                 if (data.sources && data.sources.length > 0) {
                     data.sources.forEach(src => {
-                        const tag = document.createElement('span');
-                        tag.className = 'source-tag';
-                        tag.textContent = src;
-                        sourcesList.appendChild(tag);
+                        const pill = document.createElement('span');
+                        pill.className = 'source-pill';
+                        pill.innerHTML = `
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            ${src}
+                        `;
+                        sourcesFlex.appendChild(pill);
                     });
                 } else {
-                    sourcesList.innerHTML = '<span class="source-tag">No sources cited</span>';
+                    sourcesFlex.innerHTML = '<span style="color: var(--text-muted); font-size: 0.8rem">No specific source files cited</span>';
                 }
+
+                latencyTag.textContent = `Completed in ${elapsedMs}ms`;
             } catch (err) {
-                answerContainer.textContent = 'Error: ' + err.message;
+                answerBody.innerHTML = `<span style="color: #F87171">Error: ${err.message}</span>`;
+                latencyTag.textContent = 'Error';
             } finally {
                 btn.disabled = false;
-                btnText.textContent = 'Ask Bot';
+                btnText.textContent = 'Search';
                 spinner.style.display = 'none';
             }
         }
 
-        function copyAnswer() {
-            const text = answerContainer.innerText || answerContainer.textContent;
+        function copyResponse() {
+            const text = answerBody.innerText || answerBody.textContent;
             navigator.clipboard.writeText(text).then(() => {
                 const copyBtn = document.getElementById('copy-btn');
-                copyBtn.textContent = 'Copied!';
+                copyBtn.textContent = 'Copied';
                 setTimeout(() => copyBtn.textContent = 'Copy', 2000);
             });
         }
 
+        function clearResponse() {
+            resultCard.style.display = 'none';
+            answerBody.innerHTML = '';
+            sourcesFlex.innerHTML = '';
+            input.value = '';
+            latencyTag.textContent = 'Ready';
+        }
     </script>
 </body>
 </html>
 """
+
 
 
 @app.get("/", response_class=HTMLResponse)

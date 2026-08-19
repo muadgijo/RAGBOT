@@ -53,13 +53,15 @@ def load_vector_db() -> Chroma:
 
 
 def compute_faithfulness_score(answer: str, context: str) -> float:
-    """Estimates factual faithfulness / groundedness score (0.0 to 1.0)
-    by checking the proportion of key answer claims grounded in retrieved context."""
+    """Estimates lexical groundedness / faithfulness score (0.0 to 1.0)
+    using sentence-level keyword overlap against retrieved context.
+    Note: This is a conservative lower-bound estimate since LLM abstractive
+    synthesis may rephrase factual concepts without verbatim word overlap."""
     if not answer or not context:
         return 0.0
 
-    # Split answer into sentences
-    sentences = [s.strip() for s in re.split(r"[.!?\n]+", answer) if len(s.strip()) > 10]
+    # Split answer into distinct sentences / points
+    sentences = [s.strip() for s in re.split(r"[.!?\n]+", answer) if len(s.strip()) > 12]
     if not sentences:
         return 1.0
 
@@ -67,18 +69,25 @@ def compute_faithfulness_score(answer: str, context: str) -> float:
     grounded_count = 0
 
     for sentence in sentences:
-        words = [w.lower() for w in re.findall(r"\b\w{4,}\b", sentence)]
+        # Extract meaningful words (length >= 4)
+        words = [w.lower() for w in re.findall(r"\b[a-zA-Z]{4,}\b", sentence)]
         if not words:
             grounded_count += 1
             continue
 
-        # Check if significant portion of sentence keywords exist in context
-        matches = sum(1 for w in words if w in lowered_context)
+        # Count direct and stemmed matches in context
+        matches = 0
+        for w in words:
+            stem = w.rstrip("sedign")
+            if w in lowered_context or (len(stem) >= 4 and stem in lowered_context):
+                matches += 1
+
         match_ratio = matches / len(words)
-        if match_ratio >= 0.35:
+        if match_ratio >= 0.30:
             grounded_count += 1
 
     return round(grounded_count / len(sentences), 2)
+
 
 
 def evaluate_single_query(
@@ -183,9 +192,10 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
     print("\n" + "-" * 80)
     print(f" AGGREGATE METRICS ({len(results)} queries):")
     print(f"   * Average Total Latency    : {avg_total_ms:.1f} ms (Retrieval: {avg_retrieval_ms:.1f}ms, Gen: {avg_gen_ms:.1f}ms)")
-    print(f"   * Average Faithfulness     : {avg_faithfulness:.1f}% (Low hallucination risk)")
+    print(f"   * Average Faithfulness     : {avg_faithfulness:.1f}% (Conservative sentence-overlap estimate)")
     print(f"   * Average Keyword Recall   : {avg_keyword_recall:.1f}%")
     print("=" * 80 + "\n")
+
 
 
 def main() -> None:

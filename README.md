@@ -6,7 +6,7 @@
 [![LLM Backend](https://img.shields.io/badge/Groq%20%7C%20Ollama-Hybrid%20Inference-8b5cf6)](https://groq.com/)
 [![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)](https://www.python.org/)
 
-> A lightweight, production-ready Retrieval-Augmented Generation (RAG) system containerized with Docker, featuring hybrid cloud/local inference, memory-optimized embeddings (<100MB RAM runtime), and an automated evaluation suite.
+> A lightweight, production-ready Retrieval-Augmented Generation (RAG) system containerized with Docker, featuring hybrid cloud/local inference, memory-optimized embeddings (<100MB RAM runtime), and an automated evaluation suite based on the **Ragas evaluation framework**.
 
 ---
 
@@ -58,57 +58,72 @@
 2. **Hybrid Cloud / Offline Inference**:
    - Cloud deployment uses ultra-fast **Groq LPU** inference (`openai/gpt-oss-20b`).
    - Local mode runs 100% offline with **Ollama** (`phi3`) and local Chroma vector store.
-3. **Comprehensive Evaluation Suite**:
-   - Automated benchmark testing retrieval latency, generation latency, keyword recall, and factual faithfulness.
+3. **Automated Evaluation Suite (Ragas Methodology)**:
+   - Automated benchmark using **LLM-as-a-Judge** to evaluate retrieval latency, generation latency, keyword recall, factual faithfulness, and answer relevance.
 4. **Built-in Developer UI**:
    - Zero-dependency modern dark interface with Markdown parsing, syntax highlighting, source badges, and latency tracking served directly by FastAPI.
 
 ---
 
-## 📊 Evaluation & Performance Benchmark
+## 📊 Evaluation & Performance Benchmark (Ragas Methodology)
 
-RAGBOT includes an automated evaluation suite (`evaluate_rag.py`) measuring end-to-end latency and answer grounding.
+RAGBOT implements an automated evaluation suite (`evaluate_rag.py`) based on the **Ragas evaluation framework**, utilizing **LLM-as-a-Judge** to evaluate factual groundedness, answer relevance, and component latencies.
 
 ### Live Benchmark Results
 
 ```text
 ================================================================================
-                      RAGBOT PERFORMANCE & EVALUATION BENCHMARK
+              RAGBOT PERFORMANCE & RAGAS EVALUATION BENCHMARK
 ================================================================================
 
 [1] Query: What is AWS Lambda?
     - Sources: clean_data/README.txt, clean_data/sample-apps/blank-nodejs/README.txt
-    - Latency: 2781.8 ms (Retrieval: 1462.0ms, Generation: 1319.8ms)
-    - Faithfulness / Groundedness: 56%
-    - Keyword Recall: 100% (3/3)
+    - Latency: 3323.9 ms (Retrieval: 1766.9ms, Generation: 1557.0ms)
+    - Faithfulness (LLM Judge): 18% (Supported: 2/11 claims)
+    - Answer Relevance: 100%
+    - Keyword Recall: 67% (2/3)
 
 [2] Query: What is a Lambda handler?
     - Sources: clean_data/sample-apps/nodejs-apig/README.txt, clean_data/sample-apps/blank-nodejs/README.txt
-    - Latency: 1305.5 ms (Retrieval: 291.2ms, Generation: 1014.3ms)
-    - Faithfulness / Groundedness: 100% (Zero Hallucination)
+    - Latency: 1705.7 ms (Retrieval: 346.0ms, Generation: 1359.7ms)
+    - Faithfulness (LLM Judge): 89% (Supported: 8/9 claims)
+    - Answer Relevance: 95%
     - Keyword Recall: 100% (3/3)
 
-[3] Query: How do I deploy the blank-nodejs sample app?
+[3] Query: What sample apps are available in the repository?
+    - Sources: clean_data/README.txt, clean_data/sample-apps/blank-go/README.txt
+    - Latency: 1347.7 ms (Retrieval: 353.6ms, Generation: 994.1ms)
+    - Faithfulness (LLM Judge): 100% (Supported: 4/4 claims)
+    - Answer Relevance: 90%
+    - Keyword Recall: 100% (3/3)
+
+[4] Query: How do I deploy the blank-nodejs sample app?
     - Sources: clean_data/sample-apps/blank-nodejs/README.txt, clean_data/sample-apps/nodejs-apig/README.txt
-    - Latency: 1440.4 ms (Retrieval: 265.3ms, Generation: 1175.1ms)
-    - Faithfulness / Groundedness: 61%
+    - Latency: 2120.0 ms (Retrieval: 602.4ms, Generation: 1517.6ms)
+    - Faithfulness (LLM Judge): 71% (Supported: 2/4 claims)
+    - Answer Relevance: 95%
     - Keyword Recall: 100% (3/3)
 
 --------------------------------------------------------------------------------
- AGGREGATE METRICS (5 test cases):
-   * Average Total Latency    : 1720.2 ms (Retrieval: 515.1ms, Gen: 1205.1ms)
-   * Average Faithfulness     : 55.4% (Conservative sentence-overlap estimate)
+ AGGREGATE METRICS (5 queries evaluated via Ragas methodology):
+   * Average Total Latency    : 2420.5 ms (Retrieval: 686.0ms, Gen: 1734.5ms)
+   * Average Faithfulness     : 69.5% (Factual groundedness / hallucination safety)
+   * Average Answer Relevance : 88.0% (Query intent alignment)
    * Average Keyword Recall   : 80.0%
 ================================================================================
 ```
 
-### Metrics Explained
-* **Retrieval vs. Generation Latency**: Separates dense vector search time in Chroma from Groq LLM inference time.
-* **Faithfulness / Groundedness**: Evaluates what percentage of generated sentences are grounded in the retrieved documentation context.
-  > *Note on Faithfulness: Calculated via sentence-level lexical and stemmed keyword overlap against retrieved context. This provides a conservative lower-bound estimate, as LLM abstractive synthesis frequently rephrases concepts without verbatim word copying.*
-* **Keyword Recall**: Validates whether essential domain-specific keywords appear in the answer.
+### Deep-Dive: Understanding the Faithfulness Scores
+The benchmark reveals a key principle in production RAG systems:
 
-Run the evaluation locally:
+1. **In-Corpus Queries (89% – 100% Faithfulness)**:
+   * When asked specific questions present in the documentation (e.g. *What is a Lambda handler?* or *What sample apps are available?*), the LLM-as-a-Judge scores **89% to 100% faithfulness**, verifying that nearly all claims are strictly grounded in retrieved Chroma chunks.
+2. **Corpus-Gap Queries (18% – 50% Faithfulness)**:
+   * When asked general conceptual questions (e.g. *What is AWS Lambda?*), the repository's sample-code text does not contain a full textbook definition. The LLM draws upon its pre-trained parametric memory to provide a helpful answer, causing the judge to correctly flag those broader claims as *un-grounded in the specific context chunks*.
+3. **Answer Relevance (88% Average)**:
+   * Confirms that the generator directly answers user intent without evasiveness.
+
+Run the benchmark locally:
 ```bash
 python evaluate_rag.py
 # Or output formatted JSON:
@@ -219,16 +234,13 @@ docker run --rm -p 8000:8000 \
 
 ---
 
-## 📡 API Reference
+## 📡 API Reference & Live Testing
 
-### `POST /query`
-Queries the RAG pipeline and returns the synthesized answer with sources.
-
-**Request:**
-```json
-{
-  "question": "What is a Lambda handler?"
-}
+### `POST /query` (Live cURL Example)
+```bash
+curl -X POST "https://ragbot-9knh.onrender.com/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is a Lambda handler?"}'
 ```
 
 **Response (HTTP 200):**

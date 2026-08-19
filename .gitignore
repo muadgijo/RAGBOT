@@ -5,8 +5,6 @@ __pycache__/
 # Virtual environment
 .venv/
 
-# Chroma database
-chroma/
 
 # Generated cleaned docs
 clean_data/

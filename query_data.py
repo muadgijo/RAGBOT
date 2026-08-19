@@ -1,7 +1,7 @@
 import argparse
 
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from rag_utils import get_embedding_function
 
 CHROMA_PATH = "chroma"
 
@@ -17,10 +17,9 @@ def main():
 
     query_text = args.query_text
 
-    # Load local embedding model
-    embedding_function = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2"
-    )
+    # Load embedding model
+    embedding_function = get_embedding_function()
+
 
     # Load Chroma database
     db = Chroma(

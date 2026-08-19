@@ -103,7 +103,7 @@ def get_llm_response(prompt: str, backend: str) -> str:
 
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
-            model=os.getenv("GROQ_MODEL", "llama3-8b-8192"),
+            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"),
             messages=[
                 {"role": "user", "content": prompt},
             ],
@@ -111,10 +111,115 @@ def get_llm_response(prompt: str, backend: str) -> str:
             max_tokens=256,
         )
 
+
         content = response.choices[0].message.content if response.choices else ""
         return str(content or "").strip()
 
     raise ValueError(f"Unsupported LLM backend: {backend_name}")
+
+
+class HuggingFaceAPIEmbeddings:
+    """Direct, lightweight client for HuggingFace Inference API embeddings (0 MB local memory footprint)."""
+
+    def __init__(self, api_key: str = "", model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+        self.api_key = api_key or os.getenv("HF_TOKEN", os.getenv("HUGGINGFACEHUB_API_TOKEN", ""))
+        self.model_name = model_name
+        self.endpoint_url = f"https://router.huggingface.co/hf-inference/models/{model_name}"
+
+    def _embed_batch(self, texts: List[str]) -> List[List[float]]:
+        try:
+            from huggingface_hub import InferenceClient
+
+            client = InferenceClient(api_key=self.api_key or None)
+            res = client.feature_extraction(texts, model=self.model_name)
+            if hasattr(res, "tolist"):
+                return res.tolist()
+            if isinstance(res, list):
+                return [item.tolist() if hasattr(item, "tolist") else list(item) for item in res]
+            return [list(res)]
+        except Exception:
+            # Direct HTTP fallback to current router endpoint
+            import requests
+
+            headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+            response = requests.post(
+                self.endpoint_url,
+                headers=headers,
+                json={"inputs": texts, "options": {"wait_for_model": True}},
+                timeout=30,
+            )
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Hugging Face API error ({response.status_code}): {response.text}"
+                )
+            data = response.json()
+            if isinstance(data, dict) and "error" in data:
+                raise RuntimeError(f"Hugging Face API error: {data['error']}")
+            return data
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        if not texts:
+            return []
+        return self._embed_batch(texts)
+
+    def embed_query(self, text: str) -> List[float]:
+        res = self._embed_batch([text])
+        return res[0]
+
+
+
+def get_embedding_function(backend: str = ""):
+    """Factory function returning the best available embeddings provider."""
+    backend_name = (backend or os.getenv("EMBEDDING_BACKEND", "auto")).strip().lower()
+    hf_token = os.getenv("HF_TOKEN", os.getenv("HUGGINGFACEHUB_API_TOKEN", "")).strip()
+
+    if backend_name == "hf_api":
+        if not hf_token:
+            raise ValueError(
+                "HF_TOKEN is required when EMBEDDING_BACKEND=hf_api. "
+                "Get a free token at https://huggingface.co/settings/tokens"
+            )
+        return HuggingFaceAPIEmbeddings(api_key=hf_token)
+
+    if backend_name == "fastembed":
+        from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+
+        return FastEmbedEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+    if backend_name == "local":
+        from langchain_huggingface import HuggingFaceEmbeddings
+
+        return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+    if backend_name == "auto":
+        # 1. Prefer Hugging Face Serverless API if token is provided
+        if hf_token:
+            return HuggingFaceAPIEmbeddings(api_key=hf_token)
+
+        # 2. Try FastEmbed (lightweight ONNX)
+        try:
+            from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+
+            return FastEmbedEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        except ImportError:
+            pass
+
+        # 3. Try local PyTorch embeddings if available
+        try:
+            from langchain_huggingface import HuggingFaceEmbeddings
+
+            return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        except ImportError:
+            pass
+
+        raise ValueError(
+            "No embedding provider available. Please set HF_TOKEN in your .env / cloud settings, "
+            "or install fastembed (`pip install fastembed`)."
+        )
+
+    raise ValueError(f"Unsupported embedding backend: {backend_name}")
+
+
 
 
 def rerank_documents(query: str, docs: List[Any], top_k: int = 3) -> List[Any]:

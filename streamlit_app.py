@@ -3,12 +3,16 @@ import os
 
 import streamlit as st
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
 
-from rag_utils import build_prompt, get_llm_response, retrieve_context
+from rag_utils import (
+    build_prompt,
+    get_embedding_function,
+    get_llm_response,
+    retrieve_context,
+)
 
 CHROMA_PATH = "chroma"
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
 
 
 def apply_theme() -> None:
@@ -190,8 +194,9 @@ def apply_theme() -> None:
 
 
 @st.cache_resource
-def load_embedding_function() -> HuggingFaceEmbeddings:
-    return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+def load_embedding_function():
+    return get_embedding_function()
+
 
 
 @st.cache_resource

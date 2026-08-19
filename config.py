@@ -16,8 +16,17 @@ def get_ollama_model() -> str:
 
 
 def get_groq_model() -> str:
-    return os.getenv("GROQ_MODEL", "llama3-8b-8192").strip()
+    return os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
+
 
 
 def get_groq_api_key() -> str:
     return os.getenv("GROQ_API_KEY", "").strip()
+
+
+def get_embedding_backend() -> str:
+    return os.getenv("EMBEDDING_BACKEND", "auto").strip().lower()
+
+
+def get_hf_token() -> str:
+    return os.getenv("HF_TOKEN", os.getenv("HUGGINGFACEHUB_API_TOKEN", "")).strip()

@@ -3,11 +3,16 @@ from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
 from pydantic import BaseModel
 
-from rag_utils import build_prompt, get_llm_response, retrieve_context
+from rag_utils import (
+    build_prompt,
+    get_embedding_function,
+    get_llm_response,
+    retrieve_context,
+)
 
 load_dotenv()
 
@@ -17,7 +22,7 @@ resources = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Loading embeddings...")
-    resources["embeddings"] = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    resources["embeddings"] = get_embedding_function()
     print("Loading Chroma DB...")
     resources["db"] = Chroma(
         persist_directory="chroma",
@@ -29,6 +34,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="RAGBOT", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 
 class QueryRequest(BaseModel):

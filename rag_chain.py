@@ -1,15 +1,18 @@
 import os
 
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
 
-from rag_utils import build_prompt, get_llm_response, retrieve_context
+from rag_utils import (
+    build_prompt,
+    get_embedding_function,
+    get_llm_response,
+    retrieve_context,
+)
 
 print("Loading embeddings...")
 
-embedding_function = HuggingFaceEmbeddings(
-    model_name="all-MiniLM-L6-v2"
-)
+embedding_function = get_embedding_function()
+
 
 print("Loading database...")
 

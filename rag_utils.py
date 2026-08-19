@@ -87,7 +87,7 @@ def get_llm_response(prompt: str, backend: str) -> str:
             base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
             temperature=0.1,
             stop=["\nAsk:", "\nQuestion:"],
-            num_predict=256,
+            num_predict=1024,
             num_gpu=0,
         )
         return str(llm.invoke(prompt)).strip()
@@ -104,7 +104,7 @@ def get_llm_response(prompt: str, backend: str) -> str:
                 {"role": "user", "content": prompt},
             ],
             temperature=0.1,
-            max_tokens=256,
+            max_tokens=1024,
         )
 
 

@@ -55,7 +55,9 @@ HTML_PAGE = """<!DOCTYPE html>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
+
         :root {
             --bg: #071113;
             --panel: #0d1f23;
@@ -343,8 +345,50 @@ HTML_PAGE = """<!DOCTYPE html>
             color: var(--text-main);
             font-size: 1.02rem;
             line-height: 1.7;
-            white-space: pre-wrap;
         }
+
+        .answer-text p {
+            margin-bottom: 0.85rem;
+        }
+
+        .answer-text ul, .answer-text ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .answer-text li {
+            margin-bottom: 0.35rem;
+        }
+
+        .answer-text pre {
+            background: #040c0e;
+            border: 1px solid rgba(71, 240, 255, 0.22);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 0.9rem 0;
+        }
+
+        .answer-text code {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 0.88rem;
+            color: #47f0ff;
+            background: rgba(71, 240, 255, 0.08);
+            padding: 0.15rem 0.4rem;
+            border-radius: 6px;
+        }
+
+        .answer-text pre code {
+            background: transparent;
+            padding: 0;
+            color: #d1f7fa;
+        }
+
+        .answer-text strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
 
         .sources-wrapper {
             margin-top: 1.5rem;
@@ -533,7 +577,12 @@ HTML_PAGE = """<!DOCTYPE html>
                 }
 
                 const data = await res.json();
-                answerContainer.textContent = data.answer || 'No answer returned.';
+                let rawAnswer = data.answer || 'No answer returned.';
+                try {
+                    answerContainer.innerHTML = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(rawAnswer) : rawAnswer;
+                } catch(e) {
+                    answerContainer.textContent = rawAnswer;
+                }
 
                 if (data.sources && data.sources.length > 0) {
                     data.sources.forEach(src => {
@@ -555,13 +604,14 @@ HTML_PAGE = """<!DOCTYPE html>
         }
 
         function copyAnswer() {
-            const text = answerContainer.textContent;
+            const text = answerContainer.innerText || answerContainer.textContent;
             navigator.clipboard.writeText(text).then(() => {
                 const copyBtn = document.getElementById('copy-btn');
                 copyBtn.textContent = 'Copied!';
                 setTimeout(() => copyBtn.textContent = 'Copy', 2000);
             });
         }
+
     </script>
 </body>
 </html>

@@ -43,10 +43,6 @@ STOPWORDS = {
     "by",
     "as",
     "at",
-    "use",
-    "using",
-    "aws",
-    "lambda",
 }
 
 
@@ -56,28 +52,28 @@ def normalize_text(text: str) -> str:
 
 def extract_keywords(query: str) -> List[str]:
     tokens = normalize_text(query).split()
-    return [token for token in tokens if token not in STOPWORDS and len(token) > 2]
+    return [token for token in tokens if token not in STOPWORDS and len(token) > 1]
 
 
 def build_prompt(question: str, context_text: str) -> str:
-    return f"""
-You are a concise AWS documentation assistant. Use ONLY the Context section below to answer.
+    return f"""You are a helpful, technically accurate AWS documentation assistant specializing in AWS Lambda, serverless architectures, and sample applications.
 
-Context:
+Use the provided Documentation Context as your primary reference to answer the question. If the question asks for fundamental concepts (such as what a service is, how it works, or best practices), provide a clear, accurate, and concise explanation and reference the documentation context where relevant.
+
+Documentation Context:
 {context_text}
 
-Question:
+User Question:
 {question}
 
 Instructions:
-- Answer concisely and technically.
-- Use only information present in Context. Do NOT hallucinate or invent details.
-- If the answer cannot be found in Context, reply exactly:
-  I could not find that in the documentation.
-- Prefer short, direct answers with specific terms from the context.
+- Answer clearly, concisely, and technically.
+- Cite specific components, sample apps, commands, or configuration details from the Context when relevant.
+- Do not repeat that information is missing if you can answer the question helpfully.
 
 Answer:
 """
+
 
 
 def get_llm_response(prompt: str, backend: str) -> str:
@@ -257,8 +253,9 @@ def rerank_documents(query: str, docs: List[Any], top_k: int = 3) -> List[Any]:
     return [doc for _, doc in scored_docs[:top_k]]
 
 
-def retrieve_context(db: Any, query: str, initial_k: int = 6, final_k: int = 3) -> Tuple[List[Any], str]:
+def retrieve_context(db: Any, query: str, initial_k: int = 8, final_k: int = 4) -> Tuple[List[Any], str]:
     initial_docs = db.similarity_search(query, k=initial_k)
     reranked_docs = rerank_documents(query, initial_docs, top_k=final_k)
     context_text = "\n\n".join(doc.page_content for doc in reranked_docs)
     return reranked_docs, context_text
+
